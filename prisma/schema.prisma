@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL="postgresql://postgresql:1234/E-commerce backend"")
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  description String?
+  images      String[]
+  status      String   // active | draft
+  variants    Variant[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("products")
+}
+
+model Variant {
+  id        String   @id @default(uuid())
+  sku       String   @unique
+  options   Json
+  price     Int
+  currency  String
+  stock     Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("variants")
+}
+
+model Promo {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  type      String   // percent | fixed
+  value     Decimal  @db.Decimal(10, 2)
+  startsAt  DateTime
+  endsAt    DateTime
+  active    Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("promos")
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  token     String     @unique
+  items     CartItem[]
+  promoCode String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String  @id @default(uuid())
+  sku       String
+  title     String
+  unitPrice Int
+  currency  String
+  qty       Int
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  cartId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cart_items")
+}
+
+model Order {
+  id         String      @id @default(uuid())
+  cartId     String
+  items      OrderItem[]
+  promoCode  String?
+  subtotal   Int
+  discount   Int
+  grandTotal Int
+  status     String      // created | paid | cancelled
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  sku       String
+  title     String
+  unitPrice Int
+  currency  String
+  qty       Int
+  lineTotal Int
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("order_items")
+}
+
